@@ -1,0 +1,13 @@
+{
+    "name": "Bigtree3D Format",
+    "author": "Bigtree3D",
+    "description": "Save gcode to Bigtree3D format with snapshot",
+    "version": "1.0.1",
+    
+    "minimum_cura_version": "4.0",
+    "maximum_cura_version": "4.7",
+	
+	"api": "7.0.0",
+    "supported_sdk_versions": ["7.0.0"],
+    "i18n-catalog": "cura"
+}
