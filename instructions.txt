@@ -1,0 +1,15 @@
+V1.0
+Implement output Gcode with icon
+
+V1.1
+Modification:
+Modify fixed icon size configuration output to dynamic configuration output
+Feature:
+In the menu bar extension icon Resolution extension open the configuration file and enter the desired resolution to achieve the configuration icon size function
+
+V1.2
+Modification:
+Modify the icon profile source read/write path
+Remove inter-component dependencies
+Feature:
+Identify external storage devices to enable fast writing to external storage devices

@@ -4,11 +4,9 @@
 import os
 import sys
 
-from PyQt5.QtCore import QUrl,Qt
+from PyQt5.QtCore import QUrl,Qt,QSize,QFile, QFileInfo, QIODevice,QTextStream,QByteArray
 from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
-from PyQt5.QtCore import QSize
-from PyQt5.QtCore import QFile, QFileInfo, QIODevice,QTextStream
 
 from UM.Application import Application
 from UM.Logger import Logger
@@ -27,7 +25,6 @@ from UM.i18n import i18nCatalog
 
 from cura.CuraApplication import CuraApplication
 
-from PyQt5.QtCore import QByteArray
 from cura.Snapshot import Snapshot
 from cura.Utils.Threading import call_on_qt_thread
 
@@ -225,10 +222,25 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
     @call_on_qt_thread
     def overseek(self):
         outdatar = ""
-        outdatar = outdatar + self.overread(QSize(70,70))
-        outdatar = outdatar + self.overread(QSize(95,80))
-        outdatar = outdatar + self.overread(QSize(95,95))
-        outdatar = outdatar + self.overread(QSize(160,140))
+        CONFIGPATH = os.path.join(sys.path[0],"plugins\\ResolutionExtension\\Resolution.txt")
+        if QFile(CONFIGPATH).exists() == False:#Default
+            outdatar = outdatar + self.overread(QSize(70,70))
+            outdatar = outdatar + self.overread(QSize(95,80))
+            outdatar = outdatar + self.overread(QSize(95,95))
+            outdatar = outdatar + self.overread(QSize(160,140))
+        else:
+            fh = QFile(CONFIGPATH)
+            fh.open(QIODevice.ReadOnly)
+            stream = QTextStream(fh)
+            stream.setCodec(CODEC)
+            while stream.atEnd() == False:
+                tem = stream.readLine()
+                if tem[0] == '#':
+                    continue
+                tems = tem.split(",")
+                if len(tems) == 2 and tems[0].isdigit() and tems[1].isdigit():
+                    outdatar = outdatar + self.overread(QSize(int(tems[0]),int(tems[1])))
+            fh.close()
         return outdatar
 
     def _onJobProgress(self, job, progress):
@@ -268,7 +280,7 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         fh.open(QIODevice.ReadOnly)
         stream = QTextStream(fh)
         stream.setCodec(CODEC)
-        lino = 0
+        # lino = 0
         fg = stream.readAll() + "\r\n"
         fh.close()
         bigtree3dfile = os.path.splitext(gfile)[0]+"[Bigtree].gcode"

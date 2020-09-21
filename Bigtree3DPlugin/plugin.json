@@ -1,0 +1,8 @@
+{
+    "name": "Bigtree3D Format",
+    "author": "Bigtree Tech.",
+    "description": "Save gcode to Bigtree3D format with snapshot",
+    "version": "1.2",
+    "api": "7.2.0",
+    "i18n-catalog": "Bigtree3D"
+}
