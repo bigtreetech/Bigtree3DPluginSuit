@@ -276,6 +276,8 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         outdata = ""
         outdata = outdata + self.overseek()
         outdata = outdata + "; bigtree thumbnail end\r\n\r\n"
+        outdata = outdata + self.material_usage()
+
         fh = QFile(gfile)
         fh.open(QIODevice.ReadOnly)
         stream = QTextStream(fh)
@@ -293,3 +295,10 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         fh.close()
         os.remove(gfile)
 
+# Appends mterial usage for display on the BTT TFT
+    def material_usage(self):
+        command = "M118 P0 filament_data L:{filament_amount}m \r\nM118 P0 filament_data W:{filament_weight}g\r\nM118 P0 filament_data C:{filament_cost} \r\n"
+        command = command.replace("{filament_amount}", str(Application.getInstance().getPrintInformation().materialLengths))
+        command = command.replace("{filament_weight}", str(Application.getInstance().getPrintInformation().materialWeights))
+        command = command.replace("{filament_cost}", str(Application.getInstance().getPrintInformation().materialCosts))
+        return command
