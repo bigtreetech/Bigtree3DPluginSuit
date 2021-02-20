@@ -71,6 +71,7 @@ class ResolutionExtension(Extension): #Extension inherits from PluginObject, and
             stream << "95,80\r\n"
             stream << "95,95\r\n"
             stream << "160,140\r\n"
+            stream << "200,200\r\n"
             fh.close()
             os.startfile(CONFIGPATH)
         else:
