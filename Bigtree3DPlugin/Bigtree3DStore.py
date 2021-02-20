@@ -228,6 +228,7 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
             outdatar = outdatar + self.overread(QSize(95,80))
             outdatar = outdatar + self.overread(QSize(95,95))
             outdatar = outdatar + self.overread(QSize(160,140))
+            outdatar = outdatar + self.overread(QSize(200,200))
         else:
             fh = QFile(CONFIGPATH)
             fh.open(QIODevice.ReadOnly)
