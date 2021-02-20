@@ -67,6 +67,7 @@ class ResolutionExtension(Extension): #Extension inherits from PluginObject, and
             fh.open(QIODevice.WriteOnly)
             stream = QTextStream(fh)
             stream.setCodec(CODEC)
+            stream << "# extruder_M2O = no\r\n"
             stream << "70,70\r\n"
             stream << "95,80\r\n"
             stream << "95,95\r\n"

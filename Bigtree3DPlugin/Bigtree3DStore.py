@@ -247,6 +247,26 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
     def _onJobProgress(self, job, progress):
         self.writeProgress.emit(self, progress)
 
+    @call_on_qt_thread
+    def extruder_M2O(self):
+        flag = False
+        CONFIGPATH = os.path.join(sys.path[0],"plugins\\ResolutionExtension\\Resolution.txt")
+        if QFile(CONFIGPATH).exists() == True:
+            fh = QFile(CONFIGPATH)
+            fh.open(QIODevice.ReadOnly)
+            stream = QTextStream(fh)
+            stream.setCodec(CODEC)
+            while stream.atEnd() == False:
+                tem = stream.readLine()
+                if tem.startwith("# extruder_M2O"):
+                    tems = tem.split("=")
+                    if(tems[1].trimmed() == "yes":
+                        flag = True
+                else:
+                    continue
+            fh.close()
+        return flag
+
     def _onWriteJobFinished(self, job):
         self._writing = False
         self.writeFinished.emit(self)
@@ -285,6 +305,11 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         stream.setCodec(CODEC)
         # lino = 0
         fg = stream.readAll() + "\r\n"
+        if(self.extruder_M2O()):
+            fg.replace("M104 T0 S0","")
+            fg.replace("M104 T1 S0","")
+            fg.replace("M109 T0 S0","")
+            fg.replace("M109 T1 S0","")
         fh.close()
         bigtree3dfile = os.path.splitext(gfile)[0]+"[Bigtree].gcode"
         fh = QFile(bigtree3dfile)
