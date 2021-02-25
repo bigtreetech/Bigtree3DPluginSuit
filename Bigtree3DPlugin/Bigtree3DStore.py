@@ -259,8 +259,7 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
             while stream.atEnd() == False:
                 tem = stream.readLine()
                 if tem.startwith("# extruder_M2O"):
-                    tems = tem.split("=")
-                    if(tems[1].trimmed() == "yes":
+                    if (tem.split("="))[1].strip().lower() == "yes":
                         flag = True
                 else:
                     continue
@@ -303,13 +302,12 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         fh.open(QIODevice.ReadOnly)
         stream = QTextStream(fh)
         stream.setCodec(CODEC)
-        # lino = 0
         fg = stream.readAll() + "\r\n"
-        if(self.extruder_M2O()):
-            fg.replace("M104 T0 S0","")
-            fg.replace("M104 T1 S0","")
-            fg.replace("M109 T0 S0","")
-            fg.replace("M109 T1 S0","")
+        if self.extruder_M2O() == True:
+            fg = fg.replace("M104 T0",";M104 T0")
+            fg = fg.replace("M104 T1",";M104 T1")
+            fg = fg.replace("M109 T0",";M109 T0")
+            fg = fg.replace("M109 T1",";M109 T1")
         fh.close()
         bigtree3dfile = os.path.splitext(gfile)[0]+"[Bigtree].gcode"
         fh = QFile(bigtree3dfile)

@@ -178,6 +178,25 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
             fh.close()
         return outdatar
 
+    @call_on_qt_thread
+    def extruder_M2O(self):
+        flag = False
+        CONFIGPATH = os.path.join(sys.path[0],"plugins\\ResolutionExtension\\Resolution.txt")
+        if QFile(CONFIGPATH).exists() == True:
+            fh = QFile(CONFIGPATH)
+            fh.open(QIODevice.ReadOnly)
+            stream = QTextStream(fh)
+            stream.setCodec(CODEC)
+            while stream.atEnd() == False:
+                tem = stream.readLine()
+                if tem.startwith("# extruder_M2O"):
+                    if (tem.split("="))[1].strip().lower() == "yes":
+                        flag = True
+                else:
+                    continue
+            fh.close()
+        return flag
+        
     def _onFinished(self, job):
         if self._stream:
             # Explicitly closing the stream flushes the write-buffer
@@ -218,6 +237,11 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
         stream = QTextStream(fh)
         stream.setCodec(CODEC)
         fg = stream.readAll() + "\r\n"
+        if self.extruder_M2O() == True:
+            fg = fg.replace("M104 T0",";M104 T0")
+            fg = fg.replace("M104 T1",";M104 T1")
+            fg = fg.replace("M109 T0",";M109 T0")
+            fg = fg.replace("M109 T1",";M109 T1")
         fh.close()
         bigtree3dfile = os.path.splitext(gfile)[0]+"[Bigtree].gcode"
         fh = QFile(bigtree3dfile)
