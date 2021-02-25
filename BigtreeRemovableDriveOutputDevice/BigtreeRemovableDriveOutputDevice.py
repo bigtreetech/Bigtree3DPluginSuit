@@ -232,6 +232,8 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
         outdata = ""
         outdata = outdata + self.overseek()
         outdata = outdata + "; bigtree thumbnail end\r\n\r\n"
+        outdata = outdata + self.material_usage()
+        
         fh = QFile(gfile)
         fh.open(QIODevice.ReadOnly)
         stream = QTextStream(fh)
@@ -262,3 +264,11 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
             else:
                 eject_message = Message(catalog.i18nc("@info:status", "Failed to eject {0}. Another program may be using the drive.").format(self.getName()), title = catalog.i18nc("@info:title", "Warning"))
             eject_message.show()
+            
+    # Appends mterial usage for display on the BTT TFT
+    def material_usage(self):
+        command = "M118 P0 filament_data L:{filament_amount}m \r\nM118 P0 filament_data W:{filament_weight}g\r\nM118 P0 filament_data C:{filament_cost} \r\n"
+        command = command.replace("{filament_amount}", str(Application.getInstance().getPrintInformation().materialLengths))
+        command = command.replace("{filament_weight}", str(Application.getInstance().getPrintInformation().materialWeights))
+        command = command.replace("{filament_cost}", str(Application.getInstance().getPrintInformation().materialCosts))
+        return command
