@@ -189,7 +189,7 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
             stream.setCodec(CODEC)
             while stream.atEnd() == False:
                 tem = stream.readLine()
-                if tem.startwith("# extruder_M2O"):
+                if tem.startswith("# extruder_M2O"):
                     if (tem.split("="))[1].strip().lower() == "yes":
                         flag = True
                 else:
