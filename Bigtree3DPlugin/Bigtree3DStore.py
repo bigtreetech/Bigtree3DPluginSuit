@@ -258,7 +258,7 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
             stream.setCodec(CODEC)
             while stream.atEnd() == False:
                 tem = stream.readLine()
-                if tem.startwith("# extruder_M2O"):
+                if tem.startswith("# extruder_M2O"):
                     if (tem.split("="))[1].strip().lower() == "yes":
                         flag = True
                 else:
