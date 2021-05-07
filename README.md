@@ -10,7 +10,7 @@ Bigtree3D G-code for model previews
    * Windows: The default installation path is `C:\Program Files\Ultimaker Cura [version number]\plugins`.
    * macOS: Right-click on `Ultimaker Cura.app` in your `Applications` folder then click on `Show Package Contents`. The default installation path is `Ultimaker Cura.app -> Contents -> Resources -> Plugins -> Plugins`.
    * Linux: The default installation path is `~/.local/share/cura/[version number]/plugins`.
-5. Copy the extracted `Bigtree3DPlugin`¡¢`ResolutionExtension`¡¢`BigtreeRemovableDriveOutputDevice` folders to the Cura plugins folder you located in Step 4:
+5. Copy the extracted `Bigtree3DPlugin`¡¢`BigtreeExtension`¡¢`BigtreeRemovableDriveOutputDevice` folders to the Cura plugins folder you located in Step 4:
    
    <p align="left"><img src="Bigtree3DPlugin\DCIM_1.png" width="80%"></p>
 6. Open the STL model in Cura and click `Slice`.
