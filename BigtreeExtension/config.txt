@@ -1,0 +1,9 @@
+# extruder_M2O = no
+# backcolor_red(0-255) = 0
+# backcolor_green(0-255) = 0
+# backcolor_blue(0-255) = 0
+70,70
+95,80
+95,95
+160,140
+200,200

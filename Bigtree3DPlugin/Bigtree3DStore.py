@@ -27,6 +27,7 @@ from cura.CuraApplication import CuraApplication
 
 from cura.Snapshot import Snapshot
 from cura.Utils.Threading import call_on_qt_thread
+from cura.CuraApplication import CuraApplication
 
 catalog = i18nCatalog("uranium")
 CODEC = "UTF-8"
@@ -67,22 +68,51 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         self._writing = False
 
     @call_on_qt_thread
+    def getbackcolor(self):
+        fcolor = 0x00000000
+        CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigtreeExtension"),"config.txt")
+        if QFile(CONFIGPATH).exists() == True:
+            fh = QFile(CONFIGPATH)
+            fh.open(QIODevice.ReadOnly)
+            stream = QTextStream(fh)
+            stream.setCodec(CODEC)
+            while stream.atEnd() == False:
+                tem = stream.readLine()
+                if tem.startswith("# backcolor"):
+                    var = int(0 if (tem.split("="))[1].strip().lower() == "" else (tem.split("="))[1].strip().lower())
+                    if var < 0:
+                        var = 0
+                    if var > 255:
+                        var = 255
+                if tem.startswith("# backcolor_red"):
+                    fcolor = fcolor | (var<<16)
+                if tem.startswith("# backcolor_green"):
+                    fcolor = fcolor | (var<<8)
+                if tem.startswith("# backcolor_blue"):
+                    fcolor = fcolor | var
+            fh.close()
+        return fcolor
+
+    @call_on_qt_thread
     def overread(self,msize):
         moutdata = ""
         img = Snapshot.snapshot(width = msize.width(), height = msize.height()).scaled(msize.width(),msize.height(),Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
         moutdata = moutdata + ";"+(hex(msize.width())[2:]).rjust(4,'0')+(hex(msize.height())[2:]).rjust(4,'0')+"\r\n"
         pos = QSize(0,0)
+        fcolor = self.getbackcolor()
         for ypos in range(0,img.height()):
             qrgb = ";"
             for xpos in range(0,img.width()):
                 data = img.pixel(xpos,ypos)
                 pos.setWidth(pos.width()+1)
+                if (data & 0x00FFFFFF) == 0x00000000:
+                    data = fcolor
                 qrgb = qrgb + (hex(((data & 0x00F80000) >> 8 ) | ((data & 0x0000FC00) >> 5 ) | ((data & 0x000000F8) >> 3 ))[2:]).rjust(4,'0')
             pos.setWidth(0)
             pos.setHeight(pos.height()+1)
             moutdata = moutdata + qrgb + "\r\n"
         return moutdata
-
+    
     ##  Request the specified nodes to be written to a file.
     #
     #   \param nodes A collection of scene nodes that should be written to the
@@ -222,7 +252,7 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
     @call_on_qt_thread
     def overseek(self):
         outdatar = ""
-        CONFIGPATH = os.path.join(sys.path[0],"plugins\\ResolutionExtension\\Resolution.txt")
+        CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigtreeExtension"),"config.txt")
         if QFile(CONFIGPATH).exists() == False:#Default
             outdatar = outdatar + self.overread(QSize(70,70))
             outdatar = outdatar + self.overread(QSize(95,80))
@@ -250,7 +280,7 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
     @call_on_qt_thread
     def extruder_M2O(self):
         flag = False
-        CONFIGPATH = os.path.join(sys.path[0],"plugins\\ResolutionExtension\\Resolution.txt")
+        CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigtreeExtension"),"config.txt")
         if QFile(CONFIGPATH).exists() == True:
             fh = QFile(CONFIGPATH)
             fh.open(QIODevice.ReadOnly)

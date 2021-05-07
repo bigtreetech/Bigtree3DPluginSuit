@@ -1,7 +1,6 @@
 # Copyright (c) 2017 Ultimaker B.V.
 # This Resolution Extension is released under the terms of the AGPLv3 or higher.
 
-import sys
 import os
 import os.path
 # from PyQt5.QtCore import QUrl #To find the QML for the dialogue window.
@@ -18,7 +17,9 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5.QtCore import QSize
 from PyQt5.QtCore import QFile, QFileInfo, QIODevice,QTextStream
 
-class ResolutionExtension(Extension): #Extension inherits from PluginObject, and provides some useful helper functions for adding an item to the application menu.
+from cura.CuraApplication import CuraApplication
+
+class BigtreeExtension(Extension): #Extension inherits from PluginObject, and provides some useful helper functions for adding an item to the application menu.
     ##  Creates an instance of this extension. This is basically the starting
     #   point of your code.
     #
@@ -35,10 +36,10 @@ class ResolutionExtension(Extension): #Extension inherits from PluginObject, and
 
         ## Creating a menu item. ##
         #An extension can add several menu items. They all get placed under one header. This sets the title of that header.
-        self.setMenuName("Icon Resolution Extension")
+        self.setMenuName("Icon Output Extension")
 
         #We'll add one item that says hello to the user.
-        self.addMenuItem("Set Icon Resolution", self.setresolution) #When the user clicks the menu item, the sayHello function is called.
+        self.addMenuItem("Set Icon Configuation", self.setresolution) #When the user clicks the menu item, the sayHello function is called.
 
         #Lazy-load the window. Create it when we first want to say hello.
         self.setler_window = None
@@ -55,12 +56,12 @@ class ResolutionExtension(Extension): #Extension inherits from PluginObject, and
 
     ##  Adds a message to the log, as an example of how to listen to events.
     def logMessage(self):
-        Logger.log("i", "Set Icon Resolution.")
+        Logger.log("i", "Set Icon Configuation.")
 
     ##  Creates a modal dialogue.
     # @call_on_qt_thread
     def _createDialogue(self):
-        CONFIGPATH = os.path.join(sys.path[0],"plugins\\ResolutionExtension\\Resolution.txt")
+        CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigtreeExtension"),"config.txt")
         CODEC = "UTF-8"
         if QFile(CONFIGPATH).exists() == False:#Create Default Configuration
             fh = QFile(CONFIGPATH)
@@ -68,6 +69,9 @@ class ResolutionExtension(Extension): #Extension inherits from PluginObject, and
             stream = QTextStream(fh)
             stream.setCodec(CODEC)
             stream << "# extruder_M2O = no\r\n"
+            stream << "# backcolor_red(0-255) = 0\r\n"
+            stream << "# backcolor_green(0-255) = 0\r\n"
+            stream << "# backcolor_blue(0-255) = 0\r\n"
             stream << "70,70\r\n"
             stream << "95,80\r\n"
             stream << "95,95\r\n"

@@ -1,4 +1,4 @@
-Icon Resolution Extension
+Icon BigtreePlugins Extension
 =================
 
 Bigtree3DStore supports configuring export of specified size ICONS into GCode. In the initial file, there are four reference sizes, which are referenced according to the existing rules (width,height). Each behavior has one size data, and supports output of multiple sizes simultaneously.
