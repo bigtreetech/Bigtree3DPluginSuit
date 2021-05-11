@@ -16,7 +16,7 @@ Identify external storage devices to enable fast writing to external storage dev
 
 V1.3
 Modification:
-NULL
+1、Fixed firmware adaption of M118 instruction
 New:
 1、Configuration center can change the default background color of the output icon
 2、Support binary-in-one-out extruder optimization, configuration file selection whether to automatically annotate the printed file M104 T* and M109 T*

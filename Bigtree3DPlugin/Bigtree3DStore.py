@@ -3,6 +3,7 @@
 
 import os
 import sys
+import cura.CuraApplication
 
 from PyQt5.QtCore import QUrl,Qt,QSize,QFile, QFileInfo, QIODevice,QTextStream,QByteArray
 from PyQt5.QtGui import QDesktopServices
@@ -326,7 +327,22 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         outdata = ""
         outdata = outdata + self.overseek()
         outdata = outdata + "; bigtree thumbnail end\r\n\r\n"
-        outdata = outdata + self.material_usage()
+        # global_stack = CuraApplication.getInstance().getMachineManager().activeMachine
+        # definition = global_stack.getDefinition()
+        # Logger.log("i",CuraApplication.getInstance().getCuraAPI())
+        # Logger.log("e",global_stack.getProperty("machine_gcode_flavor", "value"))
+        # Marlin Volumetric Sprinter RepRap
+        machine_gcode_flavor = CuraApplication.getInstance().getMachineManager().activeMachine.getProperty("machine_gcode_flavor", "value")
+        if "Marlin" in machine_gcode_flavor or "Volumetric" in machine_gcode_flavor:
+            outdata = outdata + self.marlin_material_usage()
+        elif "RepRap" in machine_gcode_flavor:
+            outdata = outdata + self.reprap_material_usage()
+        # Logger.log("e",definition.getProperty("machine_gcode_flavor", "value"))
+        # if definition.getProperty("machine_gcode_flavor", "value") == "Marlin" :
+        #     outdata = outdata + self.material_usage()
+        #     Logger.log("e", "Marlin.")
+        # else:
+        #     Logger.log("e", "noMarlin.")
 
         fh = QFile(gfile)
         fh.open(QIODevice.ReadOnly)
@@ -349,9 +365,16 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         fh.close()
         os.remove(gfile)
 
-# Appends mterial usage for display on the BTT TFT
-    def material_usage(self):
-        command = "M118 P0 filament_data L:{filament_amount}m \r\nM118 P0 filament_data W:{filament_weight}g\r\nM118 P0 filament_data C:{filament_cost} \r\n"
+    # Appends mterial usage for display on the BTT TFT
+    def marlin_material_usage(self):
+        command = "M118 P0 filament_data L:{filament_amount}m \r\nM118 P0 filament_data W:{filament_weight}g \r\nM118 P0 filament_data C:{filament_cost} \r\n"
+        command = command.replace("{filament_amount}", str(Application.getInstance().getPrintInformation().materialLengths))
+        command = command.replace("{filament_weight}", str(Application.getInstance().getPrintInformation().materialWeights))
+        command = command.replace("{filament_cost}", str(Application.getInstance().getPrintInformation().materialCosts))
+        return command
+
+    def reprap_material_usage(self):
+        command = "M118 P0 S\"filament_data L:{filament_amount}m\" \r\nM118 P0 S\"filament_data W:{filament_weight}g\" \r\nM118 P0 S\"filament_data C:{filament_cost}\" \r\n"
         command = command.replace("{filament_amount}", str(Application.getInstance().getPrintInformation().materialLengths))
         command = command.replace("{filament_weight}", str(Application.getInstance().getPrintInformation().materialWeights))
         command = command.replace("{filament_cost}", str(Application.getInstance().getPrintInformation().materialCosts))
