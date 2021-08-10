@@ -2,6 +2,12 @@
 Bigtree3D G-code for model previews
 <p align="center"><img src="Bigtree3DPlugin\DCIM_0.png" width="95%"></p>
 
+# Use requirement
+> Cura minimum version: 4.2.1
+> 
+> Operating system: Windows
+> 
+
 ## How to Install
 1. Update touch screen firmware to a version after [this Pull Request](https://github.com/bigtreetech/BIGTREETECH-TouchScreenFirmware/pull/844). The first release to include this feature will be `Vx.x.27`.
 2. Enable model previews by disabling `List Mode` under `Menu -> Settings -> Feature -> Files viewer List Mode`.
