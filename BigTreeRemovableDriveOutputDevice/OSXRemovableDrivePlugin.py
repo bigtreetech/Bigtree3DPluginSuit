@@ -2,15 +2,17 @@
 # Copyright (c) 2013 David Braam
 # Uranium is released under the terms of the LGPLv3 or higher.
 
-from . import BigtreeRemovableDrivePlugin
+from . import RemovableDrivePlugin
 
 import subprocess
 import os
 
 import plistlib
 
-## Support for removable devices on Mac OSX
-class BigtreeOSXRemovableDrivePlugin(BigtreeRemovableDrivePlugin.BigtreeRemovableDrivePlugin):
+
+class OSXRemovableDrivePlugin(RemovableDrivePlugin.RemovableDrivePlugin):
+    """Support for removable devices on Mac OSX"""
+
     def checkRemovableDrives(self):
         drives = {}
         p = subprocess.Popen(["system_profiler", "SPUSBDataType", "-xml"], stdout = subprocess.PIPE, stderr = subprocess.PIPE)

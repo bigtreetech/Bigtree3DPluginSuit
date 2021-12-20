@@ -1,6 +1,6 @@
-# Bigtree3DPlugin Suit
-Bigtree3D G-code for model previews
-<p align="center"><img src="Bigtree3DPlugin\DCIM_0.png" width="95%"></p>
+# BigTree3DPlugin Suit
+BigTree3D G-code for model previews
+<p align="center"><img src="BigTree3DPlugin\DCIM_0.png" width="95%"></p>
 
 # Use requirement
 > Cura minimum version: 4.2.1
@@ -16,18 +16,18 @@ Bigtree3D G-code for model previews
    * Windows: The default installation path is `C:\Program Files\Ultimaker Cura [version number]\plugins`.
    * macOS: Right-click on `Ultimaker Cura.app` in your `Applications` folder then click on `Show Package Contents`. The default installation path is `Ultimaker Cura.app -> Contents -> Resources -> Plugins -> Plugins`.
    * Linux: The default installation path is `~/.local/share/cura/[version number]/plugins`.
-5. Copy the extracted `Bigtree3DPlugin`¡¢`BigtreeExtension`¡¢`BigtreeRemovableDriveOutputDevice` folders to the Cura plugins folder you located in Step 4:
+5. Copy the extracted `BigTree3DPlugin`¡¢`BigTreeExtension`¡¢`BigTreeRemovableDriveOutputDevice` folders to the Cura plugins folder you located in Step 4:
    
-   <p align="left"><img src="Bigtree3DPlugin\DCIM_1.png" width="80%"></p>
+   <p align="left"><img src="BigTree3DPlugin\DCIM_1.png" width="80%"></p>
 6. Open the STL model in Cura and click `Slice`.
-7. Click the small up arrow on the right and select `Save as Bigtree3D format`:
+7. Click the small up arrow on the right and select `Save as BigTree3D format`:
    
-   <p align="left"><img src="Bigtree3DPlugin\DCIM_2.png" width="80%"></p>
+   <p align="left"><img src="BigTree3DPlugin\DCIM_2.png" width="80%"></p>
    
 8. Model preview is now available:
     <p align="center">
-        <img src="Bigtree3DPlugin\DCIM_3.png" width="45%">
-        <img src="Bigtree3DPlugin\DCIM_4.png" width="45%">
+        <img src="BigTree3DPlugin\DCIM_3.png" width="45%">
+        <img src="BigTree3DPlugin\DCIM_4.png" width="45%">
     </p>
 
 ## Which version of hardware supports this feature?

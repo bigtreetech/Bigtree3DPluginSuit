@@ -1,0 +1,8 @@
+{
+    "name": "BigTree Removable Drive Output Device Plugin",
+    "author": "BigTreeTech",
+    "description": "Provides removable drive hotplugging and writing support.",
+    "version": "1.0.1",
+    "api": 7,
+    "i18n-catalog": "BigTree3D"
+}

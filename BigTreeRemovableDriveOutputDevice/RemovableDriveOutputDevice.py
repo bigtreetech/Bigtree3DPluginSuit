@@ -1,13 +1,7 @@
 # Copyright (c) 2018 Ultimaker B.V.
 # Cura is released under the terms of the LGPLv3 or higher.
 
-import os
 import os.path
-import cura.CuraApplication
-
-from PyQt5.QtCore import QUrl,Qt,QSize,QFile, QFileInfo, QIODevice,QTextStream,QByteArray
-from PyQt5.QtGui import QDesktopServices
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from UM.Application import Application
 from UM.Logger import Logger
@@ -19,38 +13,42 @@ from UM.OutputDevice.OutputDevice import OutputDevice
 from UM.OutputDevice import OutputDeviceError
 
 from UM.i18n import i18nCatalog
+catalog = i18nCatalog("BigTree3D")
 
+
+from PyQt5.QtCore import QUrl,Qt,QSize,QFile, QFileInfo, QIODevice,QTextStream,QByteArray
+from PyQt5.QtGui import QDesktopServices
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from cura.Snapshot import Snapshot
 from cura.Utils.Threading import call_on_qt_thread
-from cura.CuraApplication import CuraApplication
-
-catalog = i18nCatalog("cura")
 CODEC = "UTF-8"
 
-class BigtreeRemovableDriveOutputDevice(OutputDevice):
+class RemovableDriveOutputDevice(OutputDevice):
     def __init__(self, device_id, device_name):
         super().__init__(device_id)
 
         self.setName(device_name)
-        self.setShortDescription(catalog.i18nc("@action:button Preceded by 'Ready to'.", "Bigtree3D to Removable Drive"))
-        self.setDescription(catalog.i18nc("@item:inlistbox", "Bigtree3D to {0}").format(device_name))
-        self.setIconName("Bigtree_SD")
+        self.setShortDescription(catalog.i18nc("@action:button Preceded by 'Ready to'.", "BigTree3D to Removable Drive"))
+        self.setDescription(catalog.i18nc("@item:inlistbox", "BigTree3D to {0}").format(device_name))
+        self.setIconName("BigTree3D_sd")
         self.setPriority(1)
 
         self._writing = False
         self._stream = None
 
-    ##  Request the specified nodes to be written to the removable drive.
-    #
-    #   \param nodes A collection of scene nodes that should be written to the
-    #   removable drive.
-    #   \param file_name \type{string} A suggestion for the file name to write
-    #   to. If none is provided, a file name will be made from the names of the
-    #   meshes.
-    #   \param limit_mimetypes Should we limit the available MIME types to the
-    #   MIME types available to the currently active machine?
-    #
     def requestWrite(self, nodes, file_name = None, filter_by_machine = False, file_handler = None, **kwargs):
+        """Request the specified nodes to be written to the removable drive.
+
+        :param nodes: A collection of scene nodes that should be written to the
+            removable drive.
+        :param file_name: :type{string} A suggestion for the file name to write to.
+            If none is provided, a file name will be made from the names of the
+        meshes.
+        :param limit_mimetypes: Should we limit the available MIME types to the
+        MIME types available to the currently active machine?
+
+        """
+
         filter_by_machine = True # This plugin is intended to be used by machine (regardless of what it was told to do)
         if self._writing:
             raise OutputDeviceError.DeviceBusyError()
@@ -69,7 +67,7 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
 
             # Take the intersection between file_formats and machine_file_formats.
             format_by_mimetype = {format["mime_type"]: format for format in file_formats}
-            file_formats = [format_by_mimetype[mimetype] for mimetype in machine_file_formats] #Keep them ordered according to the preference in machine_file_formats.
+            file_formats = [format_by_mimetype[mimetype] for mimetype in machine_file_formats if mimetype in format_by_mimetype]  # Keep them ordered according to the preference in machine_file_formats.
 
         if len(file_formats) == 0:
             Logger.log("e", "There are no file formats available to write with!")
@@ -89,7 +87,7 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
 
         if extension:  # Not empty string.
             extension = "." + extension
-        file_name = os.path.join(self.getId()[8:], os.path.splitext(file_name)[0] + extension)
+        file_name = os.path.join(self.getId(), file_name + extension)
 
         try:
             Logger.log("d", "Writing to %s", file_name)
@@ -103,7 +101,9 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
             job.progress.connect(self._onProgress)
             job.finished.connect(self._onFinished)
 
-            message = Message(catalog.i18nc("@info:progress Don't translate the XML tags <filename>!", "Saving to Removable Drive <filename>{0}</filename>").format(self.getName()), 0, False, -1, catalog.i18nc("@info:title", "Saving"))
+            message = Message(catalog.i18nc("@info:progress Don't translate the XML tags <filename>!",
+                                            "Saving to Removable Drive <filename>{0}</filename>").format(self.getName()),
+                              0, False, -1, catalog.i18nc("@info:title", "Saving"))
             message.show()
 
             self.writeStarted.emit(self)
@@ -118,10 +118,65 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
             Logger.log("e", "Operating system would not let us write to %s: %s", file_name, str(e))
             raise OutputDeviceError.WriteRequestFailedError(catalog.i18nc("@info:status Don't translate the XML tags <filename> or <message>!", "Could not save to <filename>{0}</filename>: <message>{1}</message>").format(file_name, str(e))) from e
 
+    def _automaticFileName(self, nodes):
+        """Generate a file name automatically for the specified nodes to be saved in.
+
+        The name generated will be the name of one of the nodes. Which node that
+        is can not be guaranteed.
+
+        :param nodes: A collection of nodes for which to generate a file name.
+        """
+        for root in nodes:
+            for child in BreadthFirstIterator(root):
+                if child.getMeshData():
+                    name = child.getName()
+                    if name:
+                        return name
+        raise OutputDeviceError.WriteRequestFailedError(catalog.i18nc("@info:status Don't translate the tag {device}!", "Could not find a file name when trying to write to {device}.").format(device = self.getName()))
+
+    def _onProgress(self, job, progress):
+        self.writeProgress.emit(self, progress)
+
+    def _onFinished(self, job):
+        if self._stream:
+            # Explicitly closing the stream flushes the write-buffer
+            try:
+                self._stream.close()
+                self._stream = None
+                self.do_snap(job.getFileName())
+            except:
+                Logger.logException("w", "An exception occurred while trying to write to removable drive.")
+                message = Message(catalog.i18nc("@info:status", "Could not save to removable drive {0}: {1}").format(self.getName(),str(job.getError())),
+                                  title = catalog.i18nc("@info:title", "Error"),
+                                  message_type = Message.MessageType.ERROR)
+                message.show()
+                self.writeError.emit(self)
+                return
+
+        self._writing = False
+        self.writeFinished.emit(self)
+        if job.getResult():
+            message = Message(catalog.i18nc("@info:status", "Saved to Removable Drive {0} as {1}").format(self.getName(), os.path.basename(job.getFileName())),
+                              title = catalog.i18nc("@info:title", "File Saved"),
+                              message_type = Message.MessageType.POSITIVE)
+            message.addAction("eject", catalog.i18nc("@action:button", "Eject"), "eject", catalog.i18nc("@action", "Eject removable device {0}").format(self.getName()))
+            message.actionTriggered.connect(self._onActionTriggered)
+            message.show()
+            self.writeSuccess.emit(self)
+        else:
+            message = Message(catalog.i18nc("@info:status",
+                                            "Could not save to removable drive {0}: {1}").format(self.getName(),
+                                                                                                 str(job.getError())),
+                              title = catalog.i18nc("@info:title", "Error"),
+                              message_type = Message.MessageType.ERROR)
+            message.show()
+            self.writeError.emit(self)
+        job.getStream().close()
+
     @call_on_qt_thread
     def getbackcolor(self):
         fcolor = 0x00000000
-        CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigtreeExtension"),"config.txt")
+        CONFIGPATH = os.path.join(Application.getInstance().getPluginRegistry().getPluginPath("BigTreeExtension"),"config.txt")
         if QFile(CONFIGPATH).exists() == True:
             fh = QFile(CONFIGPATH)
             fh.open(QIODevice.ReadOnly)
@@ -145,9 +200,9 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
         return fcolor
         
     @call_on_qt_thread
-    def overread(self,msize):
+    def overread(self, msize):
         moutdata = ""
-        img = Snapshot.snapshot(width = msize.width(), height = msize.height()).scaled(msize.width(),msize.height(),Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        img = Snapshot.snapshot(width = msize.width(), height = msize.height()).scaled(msize.width(), msize.height(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
         moutdata = moutdata + ";"+(hex(msize.width())[2:]).rjust(4,'0')+(hex(msize.height())[2:]).rjust(4,'0')+"\r\n"
         pos = QSize(0,0)
         fcolor = self.getbackcolor()
@@ -164,29 +219,10 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
             moutdata = moutdata + qrgb + "\r\n"
         return moutdata
 
-    ##  Generate a file name automatically for the specified nodes to be saved
-    #   in.
-    #
-    #   The name generated will be the name of one of the nodes. Which node that
-    #   is can not be guaranteed.
-    #
-    #   \param nodes A collection of nodes for which to generate a file name.
-    def _automaticFileName(self, nodes):
-        for root in nodes:
-            for child in BreadthFirstIterator(root):
-                if child.getMeshData():
-                    name = child.getName()
-                    if name:
-                        return name
-        raise OutputDeviceError.WriteRequestFailedError(catalog.i18nc("@info:status Don't translate the tag {device}!", "Could not find a file name when trying to write to {device}.").format(device = self.getName()))
-
-    def _onProgress(self, job, progress):
-        self.writeProgress.emit(self, progress)
-    
     @call_on_qt_thread
     def overseek(self):
         outdatar = ""
-        CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigtreeExtension"),"config.txt")
+        CONFIGPATH = os.path.join(Application.getInstance().getPluginRegistry().getPluginPath("BigTreeExtension"),"config.txt")
         if QFile(CONFIGPATH).exists() == False:#Default
             outdatar = outdatar + self.overread(QSize(70,70))
             outdatar = outdatar + self.overread(QSize(95,80))
@@ -211,7 +247,7 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
     @call_on_qt_thread
     def extruder_M2O(self):
         flag = False
-        CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigtreeExtension"),"config.txt")
+        CONFIGPATH = os.path.join(Application.getInstance().getPluginRegistry().getPluginPath("BigTreeExtension"),"config.txt")
         if QFile(CONFIGPATH).exists() == True:
             fh = QFile(CONFIGPATH)
             fh.open(QIODevice.ReadOnly)
@@ -226,49 +262,20 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
                     continue
             fh.close()
         return flag
-        
-    def _onFinished(self, job):
-        if self._stream:
-            # Explicitly closing the stream flushes the write-buffer
-            try:
-                self._stream.close()
-                self._stream = None
-                self.do_snap(job.getFileName())
-            except:
-                Logger.logException("w", "An execption occured while trying to write to removable drive.")
-                message = Message(catalog.i18nc("@info:status", "Could not save to removable drive {0}: {1}").format(self.getName(),str(job.getError())),
-                                  title = catalog.i18nc("@info:title", "Error"))
-                message.show()
-                self.writeError.emit(self)
-                return
-
-        self._writing = False
-        self.writeFinished.emit(self)
-        if job.getResult():
-            message = Message(catalog.i18nc("@info:status", "Saved to Removable Drive {0} as {1}").format(self.getName(), os.path.basename(job.getFileName())), title = catalog.i18nc("@info:title", "File Saved"))
-            message.addAction("eject", catalog.i18nc("@action:button", "Eject"), "eject", catalog.i18nc("@action", "Eject removable device {0}").format(self.getName()))
-            message.actionTriggered.connect(self._onActionTriggered)
-            message.show()
-            self.writeSuccess.emit(self)
-        else:
-            message = Message(catalog.i18nc("@info:status", "Could not save to removable drive {0}: {1}").format(self.getName(), str(job.getError())), title = catalog.i18nc("@info:title", "Warning"))
-            message.show()
-            self.writeError.emit(self)
-        job.getStream().close()
 
     @call_on_qt_thread
-    def do_snap(self,gfile):
+    def do_snap(self, filename):
         img = Snapshot.snapshot(width = 200, height = 200).scaled(200,200,Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
         outdata = ""
         outdata = outdata + self.overseek()
-        outdata = outdata + "; bigtree thumbnail end\r\n\r\n"
-        machine_gcode_flavor = CuraApplication.getInstance().getMachineManager().activeMachine.getProperty("machine_gcode_flavor", "value")
+        outdata = outdata + "; BigTree thumbnail end\r\n\r\n"
+        machine_gcode_flavor = Application.getInstance().getMachineManager().activeMachine.getProperty("machine_gcode_flavor", "value")
         if "Marlin" in machine_gcode_flavor or "Volumetric" in machine_gcode_flavor:
             outdata = outdata + self.marlin_material_usage()
         elif "RepRap" in machine_gcode_flavor:
             outdata = outdata + self.reprap_material_usage()
-        
-        fh = QFile(gfile)
+
+        fh = QFile(filename)
         fh.open(QIODevice.ReadOnly)
         stream = QTextStream(fh)
         stream.setCodec(CODEC)
@@ -279,7 +286,7 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
             fg = fg.replace("M109 T0",";M109 T0")
             fg = fg.replace("M109 T1",";M109 T1")
         fh.close()
-        bigtree3dfile = os.path.splitext(gfile)[0]+"[Bigtree].gcode"
+        bigtree3dfile = os.path.splitext(filename)[0]+"[BigTree].gcode"
         fh = QFile(bigtree3dfile)
         fh.open(QIODevice.WriteOnly)
         stream = QTextStream(fh)
@@ -287,18 +294,22 @@ class BigtreeRemovableDriveOutputDevice(OutputDevice):
         stream << outdata
         stream << fg
         fh.close()
-        os.remove(gfile)
+        os.remove(filename)
 
     def _onActionTriggered(self, message, action):
         if action == "eject":
             if Application.getInstance().getOutputDeviceManager().getOutputDevicePlugin("RemovableDriveOutputDevice").ejectDevice(self):
                 message.hide()
-
-                eject_message = Message(catalog.i18nc("@info:status", "Ejected {0}. You can now safely remove the drive.").format(self.getName()), title = catalog.i18nc("@info:title", "Safely Remove Hardware"))
+                eject_message = Message(catalog.i18nc("@info:status",
+                                                      "Ejected {0}. You can now safely remove the drive.").format(self.getName()),
+                                        title = catalog.i18nc("@info:title", "Safely Remove Hardware"))
             else:
-                eject_message = Message(catalog.i18nc("@info:status", "Failed to eject {0}. Another program may be using the drive.").format(self.getName()), title = catalog.i18nc("@info:title", "Warning"))
+                eject_message = Message(catalog.i18nc("@info:status",
+                                                      "Failed to eject {0}. Another program may be using the drive.").format(self.getName()),
+                                        title = catalog.i18nc("@info:title", "Warning"),
+                                        message_type = Message.MessageType.ERROR)
             eject_message.show()
-            
+
     # Appends mterial usage for display on the BTT TFT
     def marlin_material_usage(self):
         command = "M118 P0 filament_data L:{filament_amount}m \r\nM118 P0 filament_data W:{filament_weight}g \r\nM118 P0 filament_data C:{filament_cost} \r\n"

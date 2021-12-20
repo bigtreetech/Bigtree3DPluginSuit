@@ -2,7 +2,7 @@
 # Copyright (c) 2013 David Braam
 # Uranium is released under the terms of the LGPLv3 or higher.
 
-from . import BigtreeRemovableDrivePlugin
+from . import RemovableDrivePlugin
 
 from UM.Logger import Logger
 
@@ -10,12 +10,14 @@ import glob
 import os
 import subprocess
 
-##  Support for removable devices on Linux.
-#
-#   TODO: This code uses the most basic interfaces for handling this.
-#         We should instead use UDisks2 to handle mount/unmount and hotplugging events.
-#
-class BigtreeLinuxRemovableDrivePlugin(BigtreeRemovableDrivePlugin.BigtreeRemovableDrivePlugin):
+
+class LinuxRemovableDrivePlugin(RemovableDrivePlugin.RemovableDrivePlugin):
+    """Support for removable devices on Linux.
+
+    TODO: This code uses the most basic interfaces for handling this.
+    We should instead use UDisks2 to handle mount/unmount and hotplugging events.
+    """
+
     def checkRemovableDrives(self):
         drives = {}
         for volume in glob.glob("/media/*"):

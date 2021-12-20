@@ -10,13 +10,13 @@ from UM.Logger import Logger
 
 # Uranium/IO
 from UM.OutputDevice.OutputDevicePlugin import OutputDevicePlugin
-from . import BigtreeRemovableDriveOutputDevice
+from . import RemovableDriveOutputDevice
 
 # Uranium/l18n
 from UM.i18n import i18nCatalog
-catalog = i18nCatalog("cura")
+catalog = i18nCatalog("BigTree3D")
 
-class BigtreeRemovableDrivePlugin(OutputDevicePlugin):
+class RemovableDrivePlugin(OutputDevicePlugin):
     def __init__(self):
         super().__init__()
 
@@ -48,7 +48,7 @@ class BigtreeRemovableDrivePlugin(OutputDevicePlugin):
             result = False
 
         if result:
-            Logger.log("i", "Succesfully ejected the device")
+            Logger.log("i", "Successfully ejected the device")
         return result
 
     def performEjectDevice(self, device):
@@ -58,22 +58,22 @@ class BigtreeRemovableDrivePlugin(OutputDevicePlugin):
         while self._check_updates:
             result = self.checkRemovableDrives()
             self._addRemoveDrives(result)
-            time.sleep(1)
+            time.sleep(5)
 
     def _addRemoveDrives(self, drives):
         # First, find and add all new or changed keys
         for key, value in drives.items():
-            if "Bigtree_"+key not in self._drives:
-                self.getOutputDeviceManager().addOutputDevice(BigtreeRemovableDriveOutputDevice.BigtreeRemovableDriveOutputDevice("Bigtree_"+key, value))
+            if key not in self._drives:
+                self.getOutputDeviceManager().addOutputDevice(RemovableDriveOutputDevice.RemovableDriveOutputDevice(key, value))
                 continue
 
-            if self._drives["Bigtree_"+key] != value:
-                self.getOutputDeviceManager().removeOutputDevice("Bigtree_"+key)
-                self.getOutputDeviceManager().addOutputDevice(BigtreeRemovableDriveOutputDevice.BigtreeRemovableDriveOutputDevice("Bigtree_"+key, value))
+            if self._drives[key] != value:
+                self.getOutputDeviceManager().removeOutputDevice(key)
+                self.getOutputDeviceManager().addOutputDevice(RemovableDriveOutputDevice.RemovableDriveOutputDevice(key, value))
 
         # Then check for keys that have been removed
         for key in self._drives.keys():
             if key not in drives:
-                self.getOutputDeviceManager().removeOutputDevice("Bigtree_"+key)
+                self.getOutputDeviceManager().removeOutputDevice(key)
 
         self._drives = drives

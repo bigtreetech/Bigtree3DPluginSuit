@@ -54,16 +54,16 @@ class Bigtree3DStorePlugin(OutputDevicePlugin): #We need to be an OutputDevicePl
     #   You can use this to break the connection with the device or service, and
     #   you should unregister the output device to be displayed to the user.
     def stop(self):
-        self.getOutputDeviceManager().removeOutputDevice("Bigtree3D_store_gcode") #Remove all devices that were added. In this case it's only one.
+        self.getOutputDeviceManager().removeOutputDevice("BigTree3D_store_gcode") #Remove all devices that were added. In this case it's only one.
 
 class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
     def __init__(self):
-        super().__init__("Bigtree3D_store_gcode") #Give an ID which is used to refer to the output device.
+        super().__init__("BigTree3D_store_gcode") #Give an ID which is used to refer to the output device.
 
         #Optionally set some metadata.
-        self.setName("Bigtree3D Store Gcode") #Human-readable name (you may want to internationalise this). Gets put in messages and such.
-        self.setShortDescription("Save as Bigtree3D format") #This is put on the save button.
-        self.setDescription("Save as Bigtree3D format")
+        self.setName("BigTree3D Store Gcode") #Human-readable name (you may want to internationalise this). Gets put in messages and such.
+        self.setShortDescription("Save as BigTree3D format") #This is put on the save button.
+        self.setDescription("Save as BigTree3D format")
         self.setIconName("save")
 
         self._writing = False
@@ -71,7 +71,7 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
     @call_on_qt_thread
     def getbackcolor(self):
         fcolor = 0x00000000
-        CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigtreeExtension"),"config.txt")
+        CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigTreeExtension"),"config.txt")
         if QFile(CONFIGPATH).exists() == True:
             fh = QFile(CONFIGPATH)
             fh.open(QIODevice.ReadOnly)
@@ -253,7 +253,7 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
     @call_on_qt_thread
     def overseek(self):
         outdatar = ""
-        CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigtreeExtension"),"config.txt")
+        CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigTreeExtension"),"config.txt")
         if QFile(CONFIGPATH).exists() == False:#Default
             outdatar = outdatar + self.overread(QSize(70,70))
             outdatar = outdatar + self.overread(QSize(95,80))
@@ -281,7 +281,7 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
     @call_on_qt_thread
     def extruder_M2O(self):
         flag = False
-        CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigtreeExtension"),"config.txt")
+        CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigTreeExtension"),"config.txt")
         if QFile(CONFIGPATH).exists() == True:
             fh = QFile(CONFIGPATH)
             fh.open(QIODevice.ReadOnly)
@@ -355,7 +355,7 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
             fg = fg.replace("M109 T0",";M109 T0")
             fg = fg.replace("M109 T1",";M109 T1")
         fh.close()
-        bigtree3dfile = os.path.splitext(gfile)[0]+"[Bigtree].gcode"
+        bigtree3dfile = os.path.splitext(gfile)[0]+"[BigTree].gcode"
         fh = QFile(bigtree3dfile)
         fh.open(QIODevice.WriteOnly)
         stream = QTextStream(fh)

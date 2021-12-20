@@ -1,14 +1,14 @@
 # Copyright (c) 2015 Ultimaker B.V.
 # Copyright (c) 2013 David Braam
 # Uranium is released under the terms of the LGPLv3 or higher.
-from . import BigtreeRemovableDrivePlugin
+from . import RemovableDrivePlugin
 
 import string
 import ctypes
 from ctypes import wintypes  # Using ctypes.wintypes in the code below does not seem to work
 
 from UM.i18n import i18nCatalog
-catalog = i18nCatalog("cura")
+catalog = i18nCatalog("BigTree3D")
 
 # Ignore windows error popups. Fixes the whole "Can't open drive X" when user has an SD card reader.
 ctypes.windll.kernel32.SetErrorMode(1) #type: ignore
@@ -42,8 +42,9 @@ ctypes.windll.kernel32.DeviceIoControl.argtypes = [ #type: ignore
 ctypes.windll.kernel32.DeviceIoControl.restype = wintypes.BOOL #type: ignore
 
 
-## Removable drive support for windows
-class BigtreeWindowsRemovableDrivePlugin(BigtreeRemovableDrivePlugin.BigtreeRemovableDrivePlugin):
+class WindowsRemovableDrivePlugin(RemovableDrivePlugin.RemovableDrivePlugin):
+    """Removable drive support for windows"""
+
     def checkRemovableDrives(self):
         drives = {}
 
