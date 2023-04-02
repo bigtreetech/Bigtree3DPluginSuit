@@ -4,7 +4,7 @@ BigTree3D G-code for model previews
 
 # Requirements
 
-- Cura version: `5.2`
+- Cura version: `5.3`
 - Operating system: Windows, Linux, MacOS
 - Hardware supported: All versions of touch screen hardware released by BIGTREETECH support this feature as long as the firmware is updated, including 
  TFT24, TFT28, TFT35, TFT43, TFT50, TFT70...
