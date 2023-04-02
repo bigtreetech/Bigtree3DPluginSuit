@@ -28,8 +28,8 @@ BigTree3D G-code for model previews
    The default installation path is `~/.local/share/cura/{VERSION}/plugins`.
 
 3. Copy the following folders to the __Cura plugins__ folder you located in Step 2
-   - `BigTree3DPlugin`, 
-   - `BigTreeExtension`, 
+   - `BigTree3DPlugin` 
+   - `BigTreeExtension` 
    - `BigTreeRemovableDriveOutputDevice`
 
    ![img](BigTree3DPlugin/DCIM_1.png)
