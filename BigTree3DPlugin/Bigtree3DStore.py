@@ -5,9 +5,14 @@ import os
 import sys
 import cura.CuraApplication
 
-from PyQt5.QtCore import QUrl,Qt,QSize,QFile, QFileInfo, QIODevice,QTextStream,QByteArray
-from PyQt5.QtGui import QDesktopServices
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+try:
+    from PyQt6.QtCore import QUrl,Qt,QSize,QFile, QFileInfo, QIODevice,QTextStream,QByteArray
+    from PyQt6.QtGui import QDesktopServices
+    from PyQt6.QtWidgets import QFileDialog, QMessageBox
+except ImportError:
+    from PyQt5.QtCore import QUrl,Qt,QSize,QFile, QFileInfo, QIODevice,QTextStream,QByteArray
+    from PyQt5.QtGui import QDesktopServices
+    from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from UM.Application import Application
 from UM.Logger import Logger
@@ -24,11 +29,10 @@ from UM.PluginRegistry import PluginRegistry #Getting the location of Hello.qml.
 
 from UM.i18n import i18nCatalog
 
-from cura.CuraApplication import CuraApplication
-
 from cura.Snapshot import Snapshot
 from cura.Utils.Threading import call_on_qt_thread
 from cura.CuraApplication import CuraApplication
+from cura.CuraVersion import CuraVersion
 
 catalog = i18nCatalog("uranium")
 CODEC = "UTF-8"
@@ -67,6 +71,15 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         self.setIconName("save")
 
         self._writing = False
+        
+        self.Major=5
+        self.Minor=0
+
+        try:
+            self.Major = int(CuraVersion.split(".")[0])
+            self.Minor = int(CuraVersion.split(".")[1])
+        except:
+            pass
 
     @call_on_qt_thread
     def getbackcolor(self):
@@ -74,9 +87,11 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigTreeExtension"),"config.txt")
         if QFile(CONFIGPATH).exists() == True:
             fh = QFile(CONFIGPATH)
-            fh.open(QIODevice.ReadOnly)
+            if self.Major < 5:
+            	fh.open(QIODevice.ReadOnly)
+            else:
+             	fh.open(QIODevice.OpenModeFlag.ReadOnly)
             stream = QTextStream(fh)
-            stream.setCodec(CODEC)
             while stream.atEnd() == False:
                 tem = stream.readLine()
                 if tem.startswith("# backcolor"):
@@ -97,7 +112,10 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
     @call_on_qt_thread
     def overread(self,msize):
         moutdata = ""
-        img = Snapshot.snapshot(width = msize.width(), height = msize.height()).scaled(msize.width(),msize.height(),Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        if self.Major < 5:
+        	img = Snapshot.snapshot(width = msize.width(), height = msize.height()).scaled(msize.width(),msize.height(),Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        else:
+        	img = Snapshot.snapshot(width = msize.width(), height = msize.height()).scaled(msize.width(),msize.height(),Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.SmoothTransformation)
         moutdata = moutdata + ";"+(hex(msize.width())[2:]).rjust(4,'0')+(hex(msize.height())[2:]).rjust(4,'0')+"\r\n"
         pos = QSize(0,0)
         fcolor = self.getbackcolor()
@@ -131,14 +149,24 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         dialog = QFileDialog()
 
         dialog.setWindowTitle(catalog.i18nc("@title:window", "Save to File"))
-        dialog.setFileMode(QFileDialog.AnyFile)
-        dialog.setAcceptMode(QFileDialog.AcceptSave)
+        if self.Major < 5:                                    
+        	dialog.setFileMode(QFileDialog.AnyFile)
+        	dialog.setAcceptMode(QFileDialog.AcceptSave)
+        else:
+	        dialog.setFileMode(QFileDialog.FileMode.AnyFile)
+	        dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
 
         # Ensure platform never ask for overwrite confirmation since we do this ourselves
-        dialog.setOption(QFileDialog.DontConfirmOverwrite)
+        if self.Major < 5:
+            dialog.setOption(QFileDialog.DontConfirmOverwrite)
+        else:
+            dialog.setOption(QFileDialog.Option.DontConfirmOverwrite)
 
         if sys.platform == "linux" and "KDE_FULL_SESSION" in os.environ:
-            dialog.setOption(QFileDialog.DontUseNativeDialog)
+            if self.Major < 5:
+                dialog.setOption(QFileDialog.DontUseNativeDialog)
+            else:
+                dialog.setOption(QFileDialog.Option.DontUseNativeDialog)
 
         filters = []
         mime_types = []
@@ -192,8 +220,12 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         stored_directory = Application.getInstance().getPreferences().getValue("local_file/dialog_save_path")
         dialog.setDirectory(stored_directory)
 
-        if not dialog.exec_():
-            raise OutputDeviceError.UserCanceledError()
+        if self.Major < 5:
+            if not dialog.exec_():
+                raise OutputDeviceError.UserCanceledError()
+        else:
+            if not dialog.exec():
+                raise OutputDeviceError.UserCanceledError()
 
         save_path = dialog.directory().absolutePath()
         Application.getInstance().getPreferences().setValue("local_file/dialog_save_path", save_path)
@@ -262,9 +294,13 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
             outdatar = outdatar + self.overread(QSize(200,200))
         else:
             fh = QFile(CONFIGPATH)
-            fh.open(QIODevice.ReadOnly)
+            if self.Major < 5:
+                fh.open(QIODevice.ReadOnly)
+            else:
+                fh.open(QIODevice.OpenModeFlag.ReadOnly)
             stream = QTextStream(fh)
-            stream.setCodec(CODEC)
+            if self.Major < 5:
+                stream.setCodec(CODEC)
             while stream.atEnd() == False:
                 tem = stream.readLine()
                 if tem[0] == '#':
@@ -284,9 +320,13 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         CONFIGPATH = os.path.join(CuraApplication.getInstance().getPluginRegistry().getPluginPath("BigTreeExtension"),"config.txt")
         if QFile(CONFIGPATH).exists() == True:
             fh = QFile(CONFIGPATH)
-            fh.open(QIODevice.ReadOnly)
+            if self.Major < 5:
+                fh.open(QIODevice.ReadOnly)
+            else:
+                fh.open(QIODevice.OpenModeFlag.ReadOnly)
             stream = QTextStream(fh)
-            stream.setCodec(CODEC)
+            if self.Major < 5:
+                stream.setCodec(CODEC)
             while stream.atEnd() == False:
                 tem = stream.readLine()
                 if tem.startswith("# extruder_M2O"):
@@ -323,7 +363,10 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
 
     @call_on_qt_thread
     def do_snap(self,gfile):
-        img = Snapshot.snapshot(width = 200, height = 200).scaled(200,200,Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        if self.Major < 5:
+            img = Snapshot.snapshot(width = 200, height = 200).scaled(200,200,Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        else:
+            img = Snapshot.snapshot(width = 200, height = 200).scaled(200,200,Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.SmoothTransformation)
         outdata = ""
         outdata = outdata + self.overseek()
         outdata = outdata + "; bigtree thumbnail end\r\n\r\n"
@@ -345,9 +388,13 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
         #     Logger.log("e", "noMarlin.")
 
         fh = QFile(gfile)
-        fh.open(QIODevice.ReadOnly)
+        if self.Major < 5:
+            fh.open(QIODevice.ReadOnly)
+        else:
+            fh.open(QIODevice.OpenModeFlag.ReadOnly)
         stream = QTextStream(fh)
-        stream.setCodec(CODEC)
+        if self.Major < 5:
+            stream.setCodec(CODEC)
         fg = stream.readAll() + "\r\n"
         if self.extruder_M2O() == True:
             fg = fg.replace("M104 T0",";M104 T0")
@@ -355,11 +402,15 @@ class Bigtree3DStore(OutputDevice): #We need an actual device to do the writing.
             fg = fg.replace("M109 T0",";M109 T0")
             fg = fg.replace("M109 T1",";M109 T1")
         fh.close()
-        bigtree3dfile = os.path.splitext(gfile)[0]+"[BigTree].gcode"
+        bigtree3dfile = os.path.splitext(gfile)[0]+"_3D.gcode"
         fh = QFile(bigtree3dfile)
-        fh.open(QIODevice.WriteOnly)
+        if self.Major < 5:
+            fh.open(QIODevice.WriteOnly)
+        else:
+            fh.open(QIODevice.OpenModeFlag.WriteOnly)
         stream = QTextStream(fh)
-        stream.setCodec(CODEC)
+        if self.Major < 5:
+            stream.setCodec(CODEC)
         stream << outdata
         stream << fg
         fh.close()
