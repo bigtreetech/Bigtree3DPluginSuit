@@ -19,8 +19,11 @@ BigTree3D G-code for model previews
    ## Windows
    The default installation path is `C:\Program Files\Ultimaker Cura {VERSION}\plugins`.
    ## macOS
-   Open __Finder__ `Go` → `Go to folder...` (⇧ ⌘ G)  
    The default installation path is `~/Library/Application Support/cura/{VERSION}/plugins`  
+   
+   Open __Finder__ `Go` → `Go to folder...` (⇧ ⌘ G)  
+   Paste `~/Library/Application Support/cura/`, then press <kbd>Enter</kbd>  
+   Then navigate to `version`, `plugins`
    ## Linux
    The default installation path is `~/.local/share/cura/{VERSION}/plugins`.
 
