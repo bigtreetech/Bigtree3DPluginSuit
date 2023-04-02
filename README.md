@@ -12,7 +12,8 @@ BigTree3D G-code for model previews
 
 # How to Install the plugin
 
-1. Download [This repository](./archive/master.zip), then unzip.
+1. Download the plugin, and unzip it:
+   ## [Download BigTree3DPlugin][download_link]
 
 2. Find your Cura plugins directory:
    ## Windows
@@ -48,3 +49,4 @@ The first release to include this feature will be `Vx.x.27`.
 2. Enable model previews by disabling **List Mode** under:  
   `Menu` → `Settings` → `Feature` → `Files viewer List Mode`.
 
+  [download_link]: ./archive/master.zip
