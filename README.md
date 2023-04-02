@@ -49,4 +49,4 @@ The first release to include this feature will be `Vx.x.27`.
 2. Enable model previews by disabling **List Mode** under:  
   `Menu` → `Settings` → `Feature` → `Files viewer List Mode`.
 
-  [download_link]: ../archive/refs/heads/master.zip
+  [download_link]: https://github.com/bigtreetech/Bigtree3DPluginSuit/archive/master.zip
