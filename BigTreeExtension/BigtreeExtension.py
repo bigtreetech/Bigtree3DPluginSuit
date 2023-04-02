@@ -3,21 +3,27 @@
 
 import os
 import os.path
-# from PyQt5.QtCore import QUrl #To find the QML for the dialogue window.
-# from PyQt5.QtQml import QQmlComponent, QQmlContext #To create the dialogue window.
 
 from UM.Application import Application #To listen to the event of creating the main window, and get the QML engine.
 from UM.Extension import Extension #The PluginObject we're going to extend.
 from UM.Logger import Logger #Adding messages to the log.
 from UM.PluginRegistry import PluginRegistry #Getting the location of Hello.qml.
 
-from PyQt5.QtCore import QUrl,Qt
-from PyQt5.QtGui import QDesktopServices
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
-from PyQt5.QtCore import QSize
-from PyQt5.QtCore import QFile, QFileInfo, QIODevice,QTextStream
+try:
+    from PyQt6.QtCore import QUrl,Qt
+    from PyQt6.QtGui import QDesktopServices
+    from PyQt6.QtWidgets import QFileDialog, QMessageBox
+    from PyQt6.QtCore import QSize
+    from PyQt6.QtCore import QFile, QFileInfo, QIODevice, QTextStream
+except ImportError:
+    from PyQt5.QtCore import QUrl,Qt
+    from PyQt5.QtGui import QDesktopServices
+    from PyQt5.QtWidgets import QFileDialog, QMessageBox
+    from PyQt5.QtCore import QSize
+    from PyQt5.QtCore import QFile, QFileInfo, QIODevice,QTextStream
 
 from cura.CuraApplication import CuraApplication
+from cura.CuraVersion import CuraVersion
 
 class BigtreeExtension(Extension): #Extension inherits from PluginObject, and provides some useful helper functions for adding an item to the application menu.
     ##  Creates an instance of this extension. This is basically the starting
@@ -43,6 +49,15 @@ class BigtreeExtension(Extension): #Extension inherits from PluginObject, and pr
 
         #Lazy-load the window. Create it when we first want to say hello.
         self.setler_window = None
+        
+        self.Major=5
+        self.Minor=0
+
+        try:
+            self.Major = int(CuraVersion.split(".")[0])
+            self.Minor = int(CuraVersion.split(".")[1])
+        except:
+            pass
 
         ## Reacting to an event. ##
         Application.getInstance().mainWindowChanged.connect(self.logMessage) #When the main window is created, log a message.
@@ -65,9 +80,13 @@ class BigtreeExtension(Extension): #Extension inherits from PluginObject, and pr
         CODEC = "UTF-8"
         if QFile(CONFIGPATH).exists() == False:#Create Default Configuration
             fh = QFile(CONFIGPATH)
-            fh.open(QIODevice.WriteOnly)
+            if self.Major < 5:
+                fh.open(QIODevice.WriteOnly)
+            else:
+                fh.open(QIODevice.OpenModeFlag.WriteOnly)
             stream = QTextStream(fh)
-            stream.setCodec(CODEC)
+            if self.Major < 5:
+                stream.setCodec(CODEC)
             stream << "# extruder_M2O = no\r\n"
             stream << "# backcolor_red(0-255) = 0\r\n"
             stream << "# backcolor_green(0-255) = 0\r\n"

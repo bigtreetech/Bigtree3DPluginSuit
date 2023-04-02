@@ -15,12 +15,19 @@ from UM.OutputDevice import OutputDeviceError
 from UM.i18n import i18nCatalog
 catalog = i18nCatalog("BigTree3D")
 
+try:
+    from PyQt6.QtCore import QUrl,Qt,QSize,QFile, QFileInfo, QIODevice,QTextStream,QByteArray
+    from PyQt6.QtGui import QDesktopServices
+    from PyQt6.QtWidgets import QFileDialog, QMessageBox
+except ImportError:
+    from PyQt5.QtCore import QUrl,Qt,QSize,QFile, QFileInfo, QIODevice,QTextStream,QByteArray
+    from PyQt5.QtGui import QDesktopServices
+    from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
-from PyQt5.QtCore import QUrl,Qt,QSize,QFile, QFileInfo, QIODevice,QTextStream,QByteArray
-from PyQt5.QtGui import QDesktopServices
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from cura.Snapshot import Snapshot
 from cura.Utils.Threading import call_on_qt_thread
+from cura.CuraVersion import CuraVersion
+
 CODEC = "UTF-8"
 
 class RemovableDriveOutputDevice(OutputDevice):
@@ -35,6 +42,15 @@ class RemovableDriveOutputDevice(OutputDevice):
 
         self._writing = False
         self._stream = None
+        
+        self.Major=5
+        self.Minor=0
+
+        try:
+            self.Major = int(CuraVersion.split(".")[0])
+            self.Minor = int(CuraVersion.split(".")[1])
+        except:
+            pass
 
     def requestWrite(self, nodes, file_name = None, filter_by_machine = False, file_handler = None, **kwargs):
         """Request the specified nodes to be written to the removable drive.
@@ -179,9 +195,13 @@ class RemovableDriveOutputDevice(OutputDevice):
         CONFIGPATH = os.path.join(Application.getInstance().getPluginRegistry().getPluginPath("BigTreeExtension"),"config.txt")
         if QFile(CONFIGPATH).exists() == True:
             fh = QFile(CONFIGPATH)
-            fh.open(QIODevice.ReadOnly)
+            if self.Major < 5:
+            	fh.open(QIODevice.ReadOnly)
+            else:
+             	fh.open(QIODevice.OpenModeFlag.ReadOnly)
             stream = QTextStream(fh)
-            stream.setCodec(CODEC)
+            if self.Major < 5:
+                stream.setCodec(CODEC)
             while stream.atEnd() == False:
                 tem = stream.readLine()
                 if tem.startswith("# backcolor"):
@@ -202,7 +222,10 @@ class RemovableDriveOutputDevice(OutputDevice):
     @call_on_qt_thread
     def overread(self, msize):
         moutdata = ""
-        img = Snapshot.snapshot(width = msize.width(), height = msize.height()).scaled(msize.width(), msize.height(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        if self.Major < 5:
+        	img = Snapshot.snapshot(width = msize.width(), height = msize.height()).scaled(msize.width(),msize.height(),Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        else:
+        	img = Snapshot.snapshot(width = msize.width(), height = msize.height()).scaled(msize.width(),msize.height(),Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.SmoothTransformation)
         moutdata = moutdata + ";"+(hex(msize.width())[2:]).rjust(4,'0')+(hex(msize.height())[2:]).rjust(4,'0')+"\r\n"
         pos = QSize(0,0)
         fcolor = self.getbackcolor()
@@ -231,9 +254,13 @@ class RemovableDriveOutputDevice(OutputDevice):
             outdatar = outdatar + self.overread(QSize(200,200))
         else:
             fh = QFile(CONFIGPATH)
-            fh.open(QIODevice.ReadOnly)
+            if self.Major < 5:
+            	fh.open(QIODevice.ReadOnly)
+            else:
+             	fh.open(QIODevice.OpenModeFlag.ReadOnly)
             stream = QTextStream(fh)
-            stream.setCodec(CODEC)
+            if self.Major < 5:
+                stream.setCodec(CODEC)
             while stream.atEnd() == False:
                 tem = stream.readLine()
                 if tem[0] == '#':
@@ -250,9 +277,13 @@ class RemovableDriveOutputDevice(OutputDevice):
         CONFIGPATH = os.path.join(Application.getInstance().getPluginRegistry().getPluginPath("BigTreeExtension"),"config.txt")
         if QFile(CONFIGPATH).exists() == True:
             fh = QFile(CONFIGPATH)
-            fh.open(QIODevice.ReadOnly)
+            if self.Major < 5:
+            	fh.open(QIODevice.ReadOnly)
+            else:
+             	fh.open(QIODevice.OpenModeFlag.ReadOnly)
             stream = QTextStream(fh)
-            stream.setCodec(CODEC)
+            if self.Major < 5:
+                stream.setCodec(CODEC)
             while stream.atEnd() == False:
                 tem = stream.readLine()
                 if tem.startswith("# extruder_M2O"):
@@ -265,7 +296,10 @@ class RemovableDriveOutputDevice(OutputDevice):
 
     @call_on_qt_thread
     def do_snap(self, filename):
-        img = Snapshot.snapshot(width = 200, height = 200).scaled(200,200,Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        if self.Major < 5:
+            img = Snapshot.snapshot(width = 200, height = 200).scaled(200,200,Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        else:
+            img = Snapshot.snapshot(width = 200, height = 200).scaled(200,200,Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.SmoothTransformation)
         outdata = ""
         outdata = outdata + self.overseek()
         outdata = outdata + "; BigTree thumbnail end\r\n\r\n"
@@ -276,9 +310,13 @@ class RemovableDriveOutputDevice(OutputDevice):
             outdata = outdata + self.reprap_material_usage()
 
         fh = QFile(filename)
-        fh.open(QIODevice.ReadOnly)
+        if self.Major < 5:
+            fh.open(QIODevice.ReadOnly)
+        else:
+            fh.open(QIODevice.OpenModeFlag.ReadOnly)
         stream = QTextStream(fh)
-        stream.setCodec(CODEC)
+        if self.Major < 5:
+            stream.setCodec(CODEC)
         fg = stream.readAll() + "\r\n"
         if self.extruder_M2O() == True:
             fg = fg.replace("M104 T0",";M104 T0")
@@ -288,9 +326,13 @@ class RemovableDriveOutputDevice(OutputDevice):
         fh.close()
         bigtree3dfile = os.path.splitext(filename)[0]+"[BigTree].gcode"
         fh = QFile(bigtree3dfile)
-        fh.open(QIODevice.WriteOnly)
+        if self.Major < 5:
+            fh.open(QIODevice.WriteOnly)
+        else:
+            fh.open(QIODevice.OpenModeFlag.WriteOnly)
         stream = QTextStream(fh)
-        stream.setCodec(CODEC)
+        if self.Major < 5:
+                stream.setCodec(CODEC)
         stream << outdata
         stream << fg
         fh.close()
